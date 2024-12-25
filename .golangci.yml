@@ -1,0 +1,12 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - sqlclosecheck
+    - gosimple
+    - ineffassign
+    - unused
+
+run:
+  timeout: "2m"
