@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const maxChunckSize = 4096
+
 func (app *application) Listen() error {
 	listener, err := net.Listen("tcp", app.config.address)
 	if err != nil {
@@ -22,38 +24,47 @@ func (app *application) Listen() error {
 			continue
 		}
 
-		if err := conn.SetReadDeadline(time.Now().Add(time.Second * 15)); err != nil {
-			app.logger.Printf("error setting read timeout: %s", err.Error())
-			conn.Close()
-			continue
-		}
-		if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 15)); err != nil {
-			app.logger.Printf("error setting write timeout: %s", err.Error())
-			conn.Close()
-			continue
-		}
+		go app.handleConnection(conn)
+	}
+}
 
-		buffer := bytes.NewBuffer(nil)
-		chunck := make([]byte, app.config.payloadSizeLimit)
+func (app *application) handleConnection(conn net.Conn) {
+	defer conn.Close()
+
+	if err := conn.SetReadDeadline(time.Now().Add(time.Second * 15)); err != nil {
+		app.logger.Printf("error setting read timeout: %s", err.Error())
+		return
+	}
+	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 15)); err != nil {
+		app.logger.Printf("error setting write timeout: %s", err.Error())
+		return
+	}
+
+	var received int
+	buffer := bytes.NewBuffer(nil)
+
+	// see: https://mostafa.dev/why-do-tcp-connections-in-go-get-stuck-reading-large-amounts-of-data-f490a26a605e
+	for {
+		chunck := make([]byte, maxChunckSize)
 
 		read, err := conn.Read(chunck)
 		if err != nil {
 			app.logger.Printf("error reading data from a connection: %s", err.Error())
-			conn.Close()
-			continue
+			return
+		}
+		received += read
+
+		if _, err := buffer.Write(chunck[:read]); err != nil {
+			app.logger.Printf("error writing data from a connection to the buffer: %s", err.Error())
+			return
 		}
 
-		if _, err := buffer.Read(chunck[:read]); err != nil {
-			app.logger.Printf("error reading data from a connection: %s", err.Error())
-			continue
+		if read == 0 || read < maxChunckSize {
+			break
 		}
+	}
 
-		if _, err := conn.Write(buffer.Bytes()); err != nil {
-			app.logger.Printf("error writing to a connection: %s", err.Error())
-			conn.Close()
-			continue
-		}
-
-		conn.Close()
+	if _, err := conn.Write(buffer.Bytes()); err != nil {
+		app.logger.Printf("error writing to a connection: %s", err.Error())
 	}
 }

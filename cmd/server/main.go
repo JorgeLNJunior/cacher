@@ -6,8 +6,7 @@ import (
 )
 
 type config struct {
-	address          string
-	payloadSizeLimit int64
+	address string
 }
 
 type application struct {
@@ -17,8 +16,7 @@ type application struct {
 
 func main() {
 	cfg := config{
-		address:          ":8595",
-		payloadSizeLimit: 1_048_576,
+		address: ":8595",
 	}
 	app := &application{
 		config: cfg,
