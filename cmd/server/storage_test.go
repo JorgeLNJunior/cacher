@@ -35,6 +35,18 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestDekete(t *testing.T) {
+	storage := NewInMemoryStorage()
+	key := "foo"
+
+	storage.Set(key, randomBytes())
+	storage.Delete(key)
+
+	if ok, _ := storage.Get(key); ok {
+		t.Fatal("the key has not been deleted")
+	}
+}
+
 func randomBytes() []byte {
 	data := make([]byte, 16)
 	_, _ = rand.Read(data)

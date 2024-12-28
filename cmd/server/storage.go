@@ -30,3 +30,11 @@ func (s *InMemoryStorage) Set(key string, value []byte) {
 
 	s.data[key] = value
 }
+
+// Delete removes a key and its value from the storage.
+func (s *InMemoryStorage) Delete(key string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.data, key)
+}
