@@ -2,7 +2,7 @@
 
 - [ ] TCP server
 - [ ] ttl
-- [ ] Command line client
+- [ ] Go client
 - [ ] Gracefull shutdown
 - [ ] Persistence
 
