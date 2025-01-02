@@ -40,8 +40,31 @@ func (app *application) handleConnection(conn net.Conn) {
 		return
 	}
 
-	var received int
 	buffer := bytes.NewBuffer(nil)
+	if err := app.readData(conn, buffer); err != nil {
+		app.logger.Printf("error reading data from a connection: %s", err.Error())
+
+		_, err := conn.Write([]byte("error: cannot read data"))
+		if err != nil {
+			app.logger.Printf("error writing data to a connection: %s", err.Error())
+			return
+		}
+	}
+
+	req := Request{
+		Operation: OperationGet,
+		Key:       "foo",
+		Value:     []byte("bar"),
+	}
+
+	if _, err := conn.Write([]byte(req.String())); err != nil {
+		app.logger.Printf("error writing data to a connection: %s", err.Error())
+		return
+	}
+}
+
+func (app *application) readData(conn net.Conn, to *bytes.Buffer) error {
+	var received int
 
 	// see: https://mostafa.dev/why-do-tcp-connections-in-go-get-stuck-reading-large-amounts-of-data-f490a26a605e
 	for {
@@ -49,14 +72,12 @@ func (app *application) handleConnection(conn net.Conn) {
 
 		read, err := conn.Read(chunck)
 		if err != nil {
-			app.logger.Printf("error reading data from a connection: %s", err.Error())
-			return
+			return err
 		}
 		received += read
 
-		if _, err := buffer.Write(chunck[:read]); err != nil {
-			app.logger.Printf("error writing data from a connection to the buffer: %s", err.Error())
-			return
+		if _, err := to.Write(chunck[:read]); err != nil {
+			return err
 		}
 
 		if read == 0 || read < maxChunckSize {
@@ -64,7 +85,5 @@ func (app *application) handleConnection(conn net.Conn) {
 		}
 	}
 
-	if _, err := conn.Write(buffer.Bytes()); err != nil {
-		app.logger.Printf("error writing to a connection: %s", err.Error())
-	}
+	return nil
 }
