@@ -60,6 +60,12 @@ func (m *Request) Unmarshal(data []byte) error {
 	return nil
 }
 
+func (m Request) String() string {
+	return "Operation: " + string(m.Operation) + "\n" +
+		"Key: " + m.Key + "\n" +
+		"Value: " + string(m.Value)
+}
+
 // writeToByteSlice copy the values from a slice of bytes to
 // another slice of bytes, appending a '\n' to the seccond slice.
 func writeToByteSlice(from []byte, to []byte) {
