@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"net"
 	"time"
 )
@@ -31,17 +32,16 @@ func (app *application) Listen() error {
 func (app *application) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	if err := conn.SetReadDeadline(time.Now().Add(time.Second * 15)); err != nil {
-		app.logger.Printf("error setting read timeout: %s", err.Error())
-		return
-	}
-	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 15)); err != nil {
+	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 5)); err != nil {
 		app.logger.Printf("error setting write timeout: %s", err.Error())
 		return
 	}
 
 	buffer := bytes.NewBuffer(nil)
-	if err := app.readData(conn, buffer); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := app.readDataCtx(ctx, conn, buffer); err != nil {
 		app.logger.Printf("error reading data from a connection: %s", err.Error())
 
 		_, err := conn.Write([]byte("error: cannot read data"))
@@ -85,5 +85,17 @@ func (app *application) readData(conn net.Conn, to *bytes.Buffer) error {
 		}
 	}
 
+	return nil
+}
+
+func (app *application) readDataCtx(ctx context.Context, conn net.Conn, to *bytes.Buffer) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		if err := app.readData(conn, to); err != nil {
+			return err
+		}
+	}
 	return nil
 }
