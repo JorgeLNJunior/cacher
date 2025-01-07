@@ -44,11 +44,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	if err := app.readDataCtx(ctx, conn, buffer); err != nil {
 		app.logger.Printf("error reading data from a connection: %s", err.Error())
 
-		_, err := conn.Write([]byte("error: cannot read data"))
-		if err != nil {
-			app.logger.Printf("error writing data to a connection: %s", err.Error())
-			return
-		}
+		app.errorResponse(conn, "error reading the data")
 	}
 
 	req := Request{
@@ -57,10 +53,7 @@ func (app *application) handleConnection(conn net.Conn) {
 		Value:     []byte("bar"),
 	}
 
-	if _, err := conn.Write([]byte(req.String())); err != nil {
-		app.logger.Printf("error writing data to a connection: %s", err.Error())
-		return
-	}
+	app.okResponse(conn, "the value has been inserted successfully: "+req.String())
 }
 
 func (app *application) readData(conn net.Conn, to *bytes.Buffer) error {
@@ -98,4 +91,26 @@ func (app *application) readDataCtx(ctx context.Context, conn net.Conn, to *byte
 		}
 	}
 	return nil
+}
+
+func (app *application) errorResponse(conn net.Conn, message string) {
+	res := NewResponse(ResponseStatusError, message)
+	app.genericResponse(conn, res)
+}
+
+func (app *application) okResponse(conn net.Conn, message string) {
+	res := NewResponse(ResponseStatusOK, message)
+	app.genericResponse(conn, res)
+}
+
+func (app *application) genericResponse(conn net.Conn, res Response) {
+	data, err := res.Marshal()
+	if err != nil {
+		app.logger.Printf("error parsing the response: %s", err.Error())
+		return
+	}
+
+	if _, err := conn.Write(data); err != nil {
+		app.logger.Printf("error writing data to a connection: %s", err.Error())
+	}
 }
