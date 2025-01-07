@@ -1,5 +1,5 @@
 test:
-	@go test ./...
+	@go test ./... -v
 
 run/server:
 	@go run ./cmd/server
