@@ -44,16 +44,17 @@ func (app *application) handleConnection(conn net.Conn) {
 	if err := app.readDataCtx(ctx, conn, buffer); err != nil {
 		app.logger.Printf("error reading data from a connection: %s", err.Error())
 
-		app.errorResponse(conn, "error reading the data")
+		app.errorResponse(conn, err)
+		return
 	}
 
-	req := Request{
-		Operation: OperationGet,
-		Key:       "foo",
-		Value:     "bar",
+	req := Request{}
+	if err := req.Unmarshal(buffer.Bytes()); err != nil {
+		app.errorResponse(conn, err)
+		return
 	}
 
-	app.okResponse(conn, "the value has been inserted successfully: "+req.String())
+	app.okResponse(conn, "the value has been inserted successfully")
 }
 
 func (app *application) readData(conn net.Conn, to *bytes.Buffer) error {
@@ -93,8 +94,8 @@ func (app *application) readDataCtx(ctx context.Context, conn net.Conn, to *byte
 	return nil
 }
 
-func (app *application) errorResponse(conn net.Conn, message string) {
-	res := NewResponse(ResponseStatusError, message)
+func (app *application) errorResponse(conn net.Conn, err error) {
+	res := NewResponse(ResponseStatusError, err.Error())
 	app.genericResponse(conn, res)
 }
 
