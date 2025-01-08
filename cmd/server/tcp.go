@@ -50,7 +50,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	req := Request{
 		Operation: OperationGet,
 		Key:       "foo",
-		Value:     []byte("bar"),
+		Value:     "bar",
 	}
 
 	app.okResponse(conn, "the value has been inserted successfully: "+req.String())
