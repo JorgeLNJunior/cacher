@@ -4,12 +4,16 @@ import "errors"
 
 type ResponseStatus string
 
+func (s ResponseStatus) String() string {
+	return string(s)
+}
+
 const (
 	ResponseStatusOK    = "OK"
-	ResponseStatusError = "ER"
+	ResponseStatusError = "ERROR"
 )
 
-var ErrInvalidResponseStatus = errors.New("status must be OK or ER")
+var ErrInvalidResponseStatus = errors.New("status must be OK or ERROR")
 
 type Response struct {
 	Status  ResponseStatus
@@ -27,7 +31,10 @@ func (r Response) Marshal() ([]byte, error) {
 		return nil, ErrInvalidResponseStatus
 	}
 
-	data = append(data, byte(r.Status[0]), byte(r.Status[1]))
+	for _, v := range r.Status {
+		data = append(data, byte(v))
+	}
+	data = append(data, byte(' '))
 	for _, b := range r.Message {
 		data = append(data, byte(b))
 	}
@@ -51,4 +58,8 @@ func (r *Response) Unmarshal(data []byte) error {
 	}
 
 	return nil
+}
+
+func (r Response) String() string {
+	return r.Status.String() + " " + r.Message
 }

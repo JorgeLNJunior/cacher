@@ -16,14 +16,19 @@ func TestResponseMarshal(t *testing.T) {
 		}
 	})
 
-	t.Run("should marshal the data", func(tt *testing.T) {
+	t.Run("should marshal the response", func(tt *testing.T) {
 		res := Response{
 			Status:  ResponseStatusOK,
 			Message: "OK",
 		}
 
-		if _, err := res.Marshal(); err != nil {
+		data, err := res.Marshal()
+		if err != nil {
 			tt.Error(err)
+		}
+
+		if string(data) != res.String() {
+			tt.Errorf("expect a valid response but got '%s'", data)
 		}
 	})
 }
