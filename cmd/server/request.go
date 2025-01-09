@@ -13,6 +13,19 @@ type Request struct {
 
 type Operation string
 
+func (o Operation) Valid() bool {
+	switch {
+	case o == OperationGet:
+		return true
+	case o == OperationSet:
+		return true
+	case o == OperationDel:
+		return true
+	default:
+		return false
+	}
+}
+
 func (o Operation) String() string {
 	return string(o)
 }
@@ -20,19 +33,20 @@ func (o Operation) String() string {
 const (
 	OperationGet Operation = "GET"
 	OperationSet Operation = "SET"
+	OperationDel Operation = "DEL"
 )
 
 const maxParameters = 3
 
 var (
-	ErrInvalidOperation = errors.New("operation must be GET or SET")
+	ErrInvalidOperation = errors.New("operation must be GET, SET or DEL")
 	ErrInvalidFormat    = errors.New("message format does not complain")
-	ErrNoKey            = errors.New("should provide a key when operation is GET")
+	ErrNoKey            = errors.New("should provide a key")
 	ErrNoValue          = errors.New("should provide a value when operation is SET")
 )
 
 func (r *Request) Marshal() ([]byte, error) {
-	if r.Operation != OperationGet && r.Operation != OperationSet {
+	if !r.Operation.Valid() {
 		return nil, ErrInvalidOperation
 	}
 	if r.Key == "" {
@@ -58,7 +72,7 @@ func (r *Request) Unmarshal(data []byte) error {
 	}
 
 	operation := Operation(splitData[0])
-	if operation != OperationGet && operation != OperationSet {
+	if !operation.Valid() {
 		return ErrInvalidOperation
 	}
 
@@ -73,7 +87,7 @@ func (r *Request) Unmarshal(data []byte) error {
 		return nil
 	}
 
-	if operation == OperationGet {
+	if operation == OperationGet || operation == OperationDel {
 		r.Operation = operation
 		r.Key = splitData[1]
 		return nil

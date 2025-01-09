@@ -69,6 +69,11 @@ func (app *application) handleConnection(conn net.Conn) {
 		app.okResponse(conn, "the value has been inserted successfully")
 		return
 	}
+	if req.Operation == OperationDel {
+		app.store.Delete(req.Key)
+		app.okResponse(conn, "the value has been deleted successfully")
+		return
+	}
 
 	app.errorResponse(conn, errors.New("unknown error"))
 }

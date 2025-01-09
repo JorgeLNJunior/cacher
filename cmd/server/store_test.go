@@ -34,7 +34,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestDekete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	storage := NewInMemoryStore()
 	key := "foo"
 
