@@ -51,7 +51,8 @@ func (r *Request) Marshal() ([]byte, error) {
 }
 
 func (r *Request) Unmarshal(data []byte) error {
-	splitData := strings.SplitN(string(data), " ", maxParameters)
+	trimData := strings.TrimSuffix(string(data), "\n") // messages are ending with a \n and we should remove it
+	splitData := strings.SplitN(trimData, " ", maxParameters)
 	if len(splitData) < 2 {
 		return ErrInvalidFormat
 	}
@@ -82,7 +83,7 @@ func (r *Request) Unmarshal(data []byte) error {
 }
 
 func (r Request) String() string {
-	v := r.Operation.String() + " " + r.Key
+	v := string(r.Operation) + " " + r.Key
 	if len(r.Value) > 0 {
 		v += " " + r.Value
 	}
