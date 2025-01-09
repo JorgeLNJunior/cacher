@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/base32"
 	"testing"
@@ -12,7 +11,7 @@ func TestSet(t *testing.T) {
 	expectedKeys := 100
 
 	for i := 0; i < expectedKeys; i++ {
-		storage.Set(string(randomBytes()), randomBytes())
+		storage.Set(string(randomString()), randomString())
 	}
 
 	insertedKeys := len(storage.data)
@@ -26,11 +25,11 @@ func TestGet(t *testing.T) {
 	storage := NewInMemoryStore()
 
 	key := "foo"
-	value := []byte("bar")
+	value := "bar"
 
 	storage.Set(key, value)
 
-	if !bytes.Equal(storage.data[key], value) {
+	if storage.data[key] != value {
 		t.Fatal("inserted value differs from retrieved value")
 	}
 }
@@ -39,7 +38,7 @@ func TestDekete(t *testing.T) {
 	storage := NewInMemoryStore()
 	key := "foo"
 
-	storage.Set(key, randomBytes())
+	storage.Set(key, randomString())
 	storage.Delete(key)
 
 	if ok, _ := storage.Get(key); ok {
@@ -47,9 +46,9 @@ func TestDekete(t *testing.T) {
 	}
 }
 
-func randomBytes() []byte {
+func randomString() string {
 	data := make([]byte, 16)
 	_, _ = rand.Read(data)
 	base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(data)
-	return data
+	return string(data)
 }
