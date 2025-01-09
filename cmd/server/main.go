@@ -10,8 +10,9 @@ type config struct {
 }
 
 type application struct {
-	logger *log.Logger
 	config config
+	logger *log.Logger
+	store  *InMemoryStore
 }
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+		store:  NewInMemoryStore(),
 	}
 
 	if err := app.Listen(); err != nil {

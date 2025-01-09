@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net"
 	"time"
 )
@@ -54,7 +55,22 @@ func (app *application) handleConnection(conn net.Conn) {
 		return
 	}
 
-	app.okResponse(conn, "the value has been inserted successfully")
+	if req.Operation == OperationGet {
+		value, ok := app.store.Get(req.Key)
+		if !ok {
+			app.errorResponse(conn, errors.New("key not found"))
+			return
+		}
+		app.okResponse(conn, value)
+		return
+	}
+	if req.Operation == OperationSet {
+		app.store.Set(req.Key, req.Value)
+		app.okResponse(conn, "the value has been inserted successfully")
+		return
+	}
+
+	app.errorResponse(conn, errors.New("unknown error"))
 }
 
 func (app *application) readData(conn net.Conn, to *bytes.Buffer) error {

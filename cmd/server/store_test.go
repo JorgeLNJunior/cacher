@@ -41,7 +41,7 @@ func TestDekete(t *testing.T) {
 	storage.Set(key, randomString())
 	storage.Delete(key)
 
-	if ok, _ := storage.Get(key); ok {
+	if _, ok := storage.Get(key); ok {
 		t.Fatal("the key has not been deleted")
 	}
 }

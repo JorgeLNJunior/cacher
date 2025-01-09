@@ -15,12 +15,12 @@ func NewInMemoryStore() *InMemoryStore {
 }
 
 // Get returns if the key is stored or not and its value.
-func (s *InMemoryStore) Get(key string) (bool, string) {
+func (s *InMemoryStore) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	value, ok := s.data[key]
-	return ok, value
+	return value, ok
 }
 
 // Set stores a key-value pair in memory.
