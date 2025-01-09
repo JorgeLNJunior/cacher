@@ -8,7 +8,7 @@ import (
 )
 
 func TestSet(t *testing.T) {
-	storage := NewInMemoryStorage()
+	storage := NewInMemoryStore()
 	expectedKeys := 100
 
 	for i := 0; i < expectedKeys; i++ {
@@ -23,7 +23,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	storage := NewInMemoryStorage()
+	storage := NewInMemoryStore()
 
 	key := "foo"
 	value := []byte("bar")
@@ -36,7 +36,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestDekete(t *testing.T) {
-	storage := NewInMemoryStorage()
+	storage := NewInMemoryStore()
 	key := "foo"
 
 	storage.Set(key, randomBytes())

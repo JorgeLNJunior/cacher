@@ -2,20 +2,20 @@ package main
 
 import "sync"
 
-type InMemoryStorage struct {
+type InMemoryStore struct {
 	data map[string][]byte
 	mu   sync.RWMutex
 }
 
-// NewInMemoryStorage returns a InMemoryStorage instance.
-func NewInMemoryStorage() *InMemoryStorage {
-	return &InMemoryStorage{
+// NewInMemoryStore returns a InMemoryStore instance.
+func NewInMemoryStore() *InMemoryStore {
+	return &InMemoryStore{
 		data: make(map[string][]byte),
 	}
 }
 
 // Get returns if the key is stored or not and its value.
-func (s *InMemoryStorage) Get(key string) (bool, []byte) {
+func (s *InMemoryStore) Get(key string) (bool, []byte) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -24,7 +24,7 @@ func (s *InMemoryStorage) Get(key string) (bool, []byte) {
 }
 
 // Set stores a key-value pair in memory.
-func (s *InMemoryStorage) Set(key string, value []byte) {
+func (s *InMemoryStore) Set(key string, value []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -32,7 +32,7 @@ func (s *InMemoryStorage) Set(key string, value []byte) {
 }
 
 // Delete removes a key and its value from the storage.
-func (s *InMemoryStorage) Delete(key string) {
+func (s *InMemoryStore) Delete(key string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
