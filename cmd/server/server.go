@@ -74,6 +74,11 @@ func (app *application) handleConnection(conn net.Conn) {
 		app.okResponse(conn, "the value has been deleted successfully")
 		return
 	}
+	if req.Operation == OperationExp {
+		app.store.ExpireAt(req.Key, req.Expiry)
+		app.okResponse(conn, "the expiry has been set successfully")
+		return
+	}
 
 	app.errorResponse(conn, errors.New("unknown error"))
 }

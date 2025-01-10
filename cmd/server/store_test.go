@@ -29,7 +29,7 @@ func TestGet(t *testing.T) {
 
 	storage.Set(key, value)
 
-	if storage.data[key] != value {
+	if storage.data[key].value != value {
 		t.Fatal("inserted value differs from retrieved value")
 	}
 }

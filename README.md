@@ -1,23 +1,28 @@
 ### How the protocol works
 
 The protocol works in a simple way, there is a format to the request, and another format to the response.
-A request expect at least two values, a operation, a key and optionaly a value. Ex: `OPERATION KEY VALUE`
+A request expects at least two values: an operation, a key and optionally a value. Example: `OPERATION KEY VALUE`
 Valid operations are:
-  - GET
+  - **GET**
+    - retrieve a key from the store
     - expects a KEY
-  - SET
+  - **SET**
+    - store a key-value pair
     - expects a KEY and a VALUE
+  - **EXP**
+    - set an expiration date to a key
+    - expects a KEY and a Unix timestamp
 
-Two values are expected in a response, a status and a message. Ex: `STATUS MESSAGE`
+A response is expected to include two values: a status and a message. Example: `STATUS MESSAGE`
 Valid statuses are:
-  - OK
-  - ERROR
+  - **OK**
+  - **ERROR**
 
 ### To Do:
 
 - [x] TCP server
 - [x] In memory store
-- [ ] ttl
-- [ ] Go client
+- [x] ttl
 - [ ] Gracefull shutdown
+- [ ] Go client
 - [ ] Persistence
