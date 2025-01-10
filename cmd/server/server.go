@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -19,18 +22,53 @@ func (app *application) Listen() error {
 
 	app.logger.Printf("tcp server listening at %s\n", app.config.address)
 
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			app.logger.Printf("error accepting a tcp connection: %s", err.Error())
-			continue
-		}
+	shutdownErr := make(chan error)
+	go func() {
+		exitChan := make(chan os.Signal, 1)
+		signal.Notify(exitChan, syscall.SIGINT, syscall.SIGTERM)
+		<-exitChan
 
-		go app.handleConnection(conn)
-	}
+		app.logger.Println("shuting down the server")
+
+		c := make(chan int)
+		go func() {
+			defer close(c)
+			app.logger.Println("waiting for open connections")
+			app.wg.Wait()
+		}()
+
+		select {
+		case <-c:
+			app.logger.Println("server shutdown")
+			shutdownErr <- nil
+		case <-time.After(time.Second * 5):
+			app.logger.Println("server closing timed out")
+			shutdownErr <- errors.New("timeout")
+		}
+	}()
+
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				if errors.Is(err, net.ErrClosed) {
+					break // stop processing connections if the server is closed
+				}
+
+				app.logger.Printf("error accepting a tcp connection: %s", err.Error())
+				continue
+			}
+
+			go app.handleConnection(conn)
+		}
+	}()
+
+	return <-shutdownErr
 }
 
 func (app *application) handleConnection(conn net.Conn) {
+	app.wg.Add(1)
+	defer app.wg.Done()
 	defer conn.Close()
 
 	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 5)); err != nil {

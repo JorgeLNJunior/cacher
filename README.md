@@ -23,6 +23,6 @@ Valid statuses are:
 - [x] TCP server
 - [x] In memory store
 - [x] ttl
-- [ ] Gracefull shutdown
+- [x] Gracefull shutdown
 - [ ] Go client
 - [ ] Persistence

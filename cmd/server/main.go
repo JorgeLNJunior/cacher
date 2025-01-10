@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"sync"
 )
 
 type config struct {
@@ -13,6 +14,7 @@ type application struct {
 	config config
 	logger *log.Logger
 	store  *InMemoryStore
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -26,6 +28,6 @@ func main() {
 	}
 
 	if err := app.Listen(); err != nil {
-		app.logger.Fatalf("error listening at %s: %s", app.config.address, err.Error())
+		app.logger.Printf("error listening at %s: %s\n", app.config.address, err.Error())
 	}
 }
