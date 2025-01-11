@@ -1,6 +1,9 @@
-package main
+package data
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type ResponseStatus string
 
@@ -43,19 +46,17 @@ func (r Response) Marshal() ([]byte, error) {
 }
 
 func (r *Response) Unmarshal(data []byte) error {
-	if len(data) < 2 {
+	splitData := strings.SplitN(string(data), " ", 2)
+	if len(splitData) < 2 {
 		return ErrInvalidResponseStatus
 	}
 
-	status := ResponseStatus(data[:2])
+	status := ResponseStatus(splitData[0])
 	if status != ResponseStatusOK && status != ResponseStatusError {
 		return ErrInvalidResponseStatus
 	}
 	r.Status = status
-
-	if len(data) > 2 {
-		r.Message = string(data[:3])
-	}
+	r.Message = string(splitData[1])
 
 	return nil
 }

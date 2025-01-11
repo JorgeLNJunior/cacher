@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"errors"
@@ -64,8 +64,11 @@ func (r *Request) Marshal() ([]byte, error) {
 	}
 
 	data := r.Operation.String() + " " + r.Key
-	if len(r.Value) > 0 {
+	if r.Operation == OperationSet {
 		data += " " + r.Value
+	}
+	if r.Operation == OperationExp {
+		data += " " + strconv.FormatInt(r.Expiry.Unix(), 10)
 	}
 
 	return []byte(data), nil

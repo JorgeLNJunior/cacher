@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/JorgeLNJunior/cacher/pkg/data"
 )
 
 const maxChunckSize = 4096
@@ -87,13 +89,13 @@ func (app *application) handleConnection(conn net.Conn) {
 		return
 	}
 
-	req := Request{}
+	req := data.Request{}
 	if err := req.Unmarshal(buffer.Bytes()); err != nil {
 		app.errorResponse(conn, err)
 		return
 	}
 
-	if req.Operation == OperationGet {
+	if req.Operation == data.OperationGet {
 		value, ok := app.store.Get(req.Key)
 		if !ok {
 			app.errorResponse(conn, errors.New("key not found"))
@@ -102,17 +104,17 @@ func (app *application) handleConnection(conn net.Conn) {
 		app.okResponse(conn, value)
 		return
 	}
-	if req.Operation == OperationSet {
+	if req.Operation == data.OperationSet {
 		app.store.Set(req.Key, req.Value)
 		app.okResponse(conn, "the value has been inserted successfully")
 		return
 	}
-	if req.Operation == OperationDel {
+	if req.Operation == data.OperationDel {
 		app.store.Delete(req.Key)
 		app.okResponse(conn, "the value has been deleted successfully")
 		return
 	}
-	if req.Operation == OperationExp {
+	if req.Operation == data.OperationExp {
 		app.store.ExpireAt(req.Key, req.Expiry)
 		app.okResponse(conn, "the expiry has been set successfully")
 		return
@@ -159,16 +161,16 @@ func (app *application) readDataCtx(ctx context.Context, conn net.Conn, to *byte
 }
 
 func (app *application) errorResponse(conn net.Conn, err error) {
-	res := NewResponse(ResponseStatusError, err.Error())
+	res := data.NewResponse(data.ResponseStatusError, err.Error())
 	app.genericResponse(conn, res)
 }
 
 func (app *application) okResponse(conn net.Conn, message string) {
-	res := NewResponse(ResponseStatusOK, message)
+	res := data.NewResponse(data.ResponseStatusOK, message)
 	app.genericResponse(conn, res)
 }
 
-func (app *application) genericResponse(conn net.Conn, res Response) {
+func (app *application) genericResponse(conn net.Conn, res data.Response) {
 	data, err := res.Marshal()
 	if err != nil {
 		app.logger.Printf("error parsing the response: %s", err.Error())

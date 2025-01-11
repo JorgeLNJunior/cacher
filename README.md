@@ -24,5 +24,6 @@ Valid statuses are:
 - [x] In memory store
 - [x] ttl
 - [x] Gracefull shutdown
-- [ ] Go client
+- [x] CLI client
+- [ ] Docker
 - [ ] Persistence
