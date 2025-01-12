@@ -45,11 +45,11 @@ const (
 const maxParameters = 3
 
 var (
-	ErrInvalidOperation     = errors.New("operation must be GET, SET or DEL")
+	ErrInvalidOperation     = errors.New("operation must be GET, SET, DEL or EXP")
 	ErrInvalidFormat        = errors.New("message format does not complain")
 	ErrNoKey                = errors.New("should provide a key")
 	ErrNoValue              = errors.New("should provide a value when operation is SET")
-	ErrInvalidUnixTimestamp = errors.New("should provide a valid a unix timestamp")
+	ErrInvalidUnixTimestamp = errors.New("should provide a valid unix timestamp")
 )
 
 func (r *Request) Marshal() ([]byte, error) {
