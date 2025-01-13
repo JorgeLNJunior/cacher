@@ -5,13 +5,13 @@ run/server:
 	@go run ./cmd/server
 
 build/server:
-	@go build -o ./bin/server -v ./cmd/server
+	@go build -o ./bin/server -v -race ./cmd/server
 
 run/cli:
 	@go run ./cmd/cli
 
 build/cli:
-	@go build -o ./bin/cli -v ./cmd/cli
+	@go build -o ./bin/cli -v -race ./cmd/cli
 
 build/docker:
 	@docker build --tag cacher:dev .

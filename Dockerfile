@@ -6,8 +6,8 @@ COPY ./ ./
 
 RUN apk -U upgrade
 
-RUN go build -o ./bin/server -v ./cmd/server
-RUN go build -o ./bin/cli -v ./cmd/cli
+RUN go build -o ./bin/server -v -race ./cmd/server
+RUN go build -o ./bin/cli -v -race ./cmd/cli
 
 FROM alpine:3.21
 
