@@ -59,3 +59,5 @@ Valid statuses are:
 - [x] CLI client
 - [x] Docker
 - [ ] Persistence
+- [ ] Log levels
+- [ ] Configuration arguments
