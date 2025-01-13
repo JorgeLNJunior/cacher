@@ -5,9 +5,12 @@ WORKDIR /usr/app
 COPY ./ ./
 
 RUN apk -U upgrade
+RUN apk add gcc make libc-dev
 
-RUN go build -o ./bin/server -v -race ./cmd/server
-RUN go build -o ./bin/cli -v -race ./cmd/cli
+ENV CGO_ENABLED=1
+
+RUN make build/server
+RUN make build/cli
 
 FROM alpine:3.21
 
