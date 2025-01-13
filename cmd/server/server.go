@@ -30,21 +30,21 @@ func (app *application) Listen() error {
 		signal.Notify(exitChan, syscall.SIGINT, syscall.SIGTERM)
 		<-exitChan
 
-		app.logger.Println("shuting down the server")
+		app.logger.Println("started shutting down the server")
 
 		c := make(chan int)
 		go func() {
 			defer close(c)
-			app.logger.Println("waiting for open connections")
+			app.logger.Println("waiting for open connections before shutting down the server")
 			app.wg.Wait()
 		}()
 
 		select {
 		case <-c:
-			app.logger.Println("server shutdown")
+			app.logger.Println("the server has successfully shutdown")
 			shutdownErr <- nil
 		case <-time.After(time.Second * 5):
-			app.logger.Println("server closing timed out")
+			app.logger.Println("the server has timed out while closing")
 			shutdownErr <- errors.New("timeout")
 		}
 	}()
@@ -65,7 +65,22 @@ func (app *application) Listen() error {
 		}
 	}()
 
-	return <-shutdownErr
+	err = <-shutdownErr
+	if err != nil {
+		app.logger.Printf("error shuting down the server: %s", err)
+	}
+
+	app.logger.Println("started persisting the data on disk")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := app.persistanceStore.Persist(ctx); err != nil {
+		app.logger.Printf("error persisting the data on disk: %s", err)
+		return err
+	}
+	app.logger.Println("the data has been successfully persisted")
+
+	return nil
 }
 
 func (app *application) handleConnection(conn net.Conn) {

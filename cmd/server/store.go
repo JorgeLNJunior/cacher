@@ -11,12 +11,12 @@ type InMemoryStore struct {
 }
 
 type StoreItem struct {
-	value  string
-	expiry time.Time
+	Value  string
+	Expiry time.Time
 }
 
 func (i StoreItem) Expired() bool {
-	return time.Now().After(i.expiry)
+	return time.Now().After(i.Expiry)
 }
 
 var oneYear = time.Now().Add(time.Hour * 24 * 365)
@@ -57,7 +57,7 @@ func (s *InMemoryStore) Get(key string) (string, bool) {
 		return "", false
 	}
 
-	return item.value, ok
+	return item.Value, ok
 }
 
 // Set stores a key-value pair in memory.
@@ -66,8 +66,8 @@ func (s *InMemoryStore) Set(key string, value string) {
 	defer s.mu.Unlock()
 
 	item := StoreItem{
-		value:  value,
-		expiry: oneYear,
+		Value:  value,
+		Expiry: oneYear,
 	}
 
 	s.data[key] = item
@@ -91,6 +91,30 @@ func (s *InMemoryStore) ExpireAt(key string, t time.Time) {
 		return
 	}
 
-	item.expiry = t
+	item.Expiry = t
 	s.data[key] = item
+}
+
+// Dump returns a copy of all the data in the store.
+func (s *InMemoryStore) Dump() map[string]StoreItem {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	dump := make(map[string]StoreItem)
+	for k, v := range s.data {
+		dump[k] = v
+	}
+	return dump
+}
+
+func (s *InMemoryStore) Restore(data map[string]StoreItem) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for k, v := range data {
+		if _, exist := s.data[k]; exist {
+			continue
+		}
+		s.data[k] = v
+	}
 }

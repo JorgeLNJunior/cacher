@@ -58,6 +58,6 @@ Valid statuses are:
 - [x] Gracefull shutdown
 - [x] CLI client
 - [x] Docker
-- [ ] Persistence
+- [x] Persistence
 - [ ] Log levels
 - [ ] Configuration arguments
