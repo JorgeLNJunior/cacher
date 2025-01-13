@@ -55,7 +55,7 @@ func TestResponseUnmarshal(t *testing.T) {
 	})
 
 	t.Run("should unmarshal the data", func(tt *testing.T) {
-		data := []byte("OKthis is a message")
+		data := []byte("OK this is a message")
 
 		res := Response{}
 		if err := res.Unmarshal(data); err != nil {
