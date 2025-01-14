@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,6 +26,15 @@ func NewInDiskPersistanceStore(store *InMemoryStore) (*OnDiskPersistanceStore, e
 	dataDir := filepath.Join(userConfigDir, "cacher")
 	dumpFileName := "dump"
 
+	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
+		return nil, err
+	}
+	file, err := os.Create(path.Join(dataDir, dumpFileName))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
 	return &OnDiskPersistanceStore{
 		store:        store,
 		dataDir:      dataDir,
@@ -39,21 +50,13 @@ func (s OnDiskPersistanceStore) Persist(ctx context.Context) error {
 	default:
 		dump := s.store.Dump()
 
-		if err := os.MkdirAll(s.dataDir, os.ModePerm); err != nil {
-			return err
-		}
-
-		file, err := os.Create(path.Join(s.dataDir, s.dumpFileName))
+		file, err := os.OpenFile(path.Join(s.dataDir, s.dumpFileName), os.O_RDWR|os.O_TRUNC, os.ModePerm)
 		if err != nil {
 			return err
 		}
+		defer file.Close()
 
-		data, err := json.Marshal(dump)
-		if err != nil {
-			return err
-		}
-
-		if _, err := file.Write(data); err != nil {
+		if err := json.NewEncoder(file).Encode(dump); err != nil {
 			return err
 		}
 
@@ -71,10 +74,16 @@ func (s OnDiskPersistanceStore) Restore(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		defer file.Close()
 
 		dump := make(map[string]StoreItem)
 		if err := json.NewDecoder(file).Decode(&dump); err != nil {
-			return err
+			switch {
+			case errors.Is(err, io.EOF):
+				return nil // file is empty
+			default:
+				return err
+			}
 		}
 		s.store.Restore(dump)
 

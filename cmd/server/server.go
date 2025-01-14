@@ -70,15 +70,17 @@ func (app *application) Listen() error {
 		app.logger.Error("error shuting down the server", loggerArgs{"err": err.Error()})
 	}
 
-	app.logger.Info("started persisting the data on disk", nil)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	if app.config.persist {
+		app.logger.Info("started persisting the data on disk", nil)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer cancel()
 
-	if err := app.persistanceStore.Persist(ctx); err != nil {
-		app.logger.Error("error persisting the data on disk", loggerArgs{"err": err.Error()})
-		return err
+		if err := app.persistanceStore.Persist(ctx); err != nil {
+			app.logger.Error("error persisting the data on disk", loggerArgs{"err": err.Error()})
+			return err
+		}
+		app.logger.Info("the data has been successfully persisted", nil)
 	}
-	app.logger.Info("the data has been successfully persisted", nil)
 
 	return nil
 }

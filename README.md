@@ -16,6 +16,10 @@ You can run the server by compiling it or by running a Docker container:
     - `make build/docker`
     - `make run/docker`
 
+Your can pass some arguments at server startup.
+  - `-address=HOST:PORT` changes the address the server listen. Default: `:8595`
+  - `-persist=BOOL` if `true` persists the data on disk on server shutdown. Default: `false`
+
 ### Making requests
 
 You can make requests to the server by opening a TCP connection to `:8595` using any tool you prefer or the CLI.
@@ -60,4 +64,4 @@ Valid statuses are:
 - [x] Docker
 - [x] Persistence
 - [x] Logging level
-- [ ] Configuration arguments
+- [x] Configuration arguments

@@ -14,6 +14,8 @@ RUN make build/cli
 
 FROM alpine:3.21
 
+ENV CACHER_PERSISTANCE=false
+
 COPY --from=builder /usr/app/bin /usr/local/bin/cacher
 
 RUN apk -U upgrade
@@ -24,4 +26,4 @@ EXPOSE 8595
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD \
   echo "GET foo" | nc localhost 8595 || exit 1
 
-CMD [ "/usr/local/bin/cacher/server" ]
+CMD [ "sh", "-c", "/usr/local/bin/cacher/server -persist=${CACHER_PERSISTANCE}"]
