@@ -22,7 +22,7 @@ func (app *application) Listen() error {
 	}
 	defer listener.Close()
 
-	app.logger.Printf("tcp server listening at %s\n", app.config.address)
+	app.logger.Info("tcp server is listening", loggerArgs{"addr": app.config.address})
 
 	shutdownErr := make(chan error)
 	go func() {
@@ -30,21 +30,21 @@ func (app *application) Listen() error {
 		signal.Notify(exitChan, syscall.SIGINT, syscall.SIGTERM)
 		<-exitChan
 
-		app.logger.Println("started shutting down the server")
+		app.logger.Info("started shutting down the server", nil)
 
 		c := make(chan int)
 		go func() {
 			defer close(c)
-			app.logger.Println("waiting for open connections before shutting down the server")
+			app.logger.Info("waiting for open connections before shutting down the server", nil)
 			app.wg.Wait()
 		}()
 
 		select {
 		case <-c:
-			app.logger.Println("the server has successfully shutdown")
+			app.logger.Info("the server has successfully shutdown", nil)
 			shutdownErr <- nil
 		case <-time.After(time.Second * 5):
-			app.logger.Println("the server has timed out while closing")
+			app.logger.Error("the server has timed out while closing", nil)
 			shutdownErr <- errors.New("timeout")
 		}
 	}()
@@ -57,7 +57,7 @@ func (app *application) Listen() error {
 					break // stop processing connections if the server is closed
 				}
 
-				app.logger.Printf("error accepting a tcp connection: %s", err.Error())
+				app.logger.Error("error accepting a tcp connection", loggerArgs{"err": err.Error()})
 				continue
 			}
 
@@ -67,18 +67,18 @@ func (app *application) Listen() error {
 
 	err = <-shutdownErr
 	if err != nil {
-		app.logger.Printf("error shuting down the server: %s", err)
+		app.logger.Error("error shuting down the server", loggerArgs{"err": err.Error()})
 	}
 
-	app.logger.Println("started persisting the data on disk")
+	app.logger.Info("started persisting the data on disk", nil)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	if err := app.persistanceStore.Persist(ctx); err != nil {
-		app.logger.Printf("error persisting the data on disk: %s", err)
+		app.logger.Error("error persisting the data on disk", loggerArgs{"err": err.Error()})
 		return err
 	}
-	app.logger.Println("the data has been successfully persisted")
+	app.logger.Info("the data has been successfully persisted", nil)
 
 	return nil
 }
@@ -89,7 +89,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 5)); err != nil {
-		app.logger.Printf("error setting write timeout: %s", err.Error())
+		app.logger.Error("error setting write timeout", loggerArgs{"err": err.Error()})
 		return
 	}
 
@@ -98,8 +98,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	defer cancel()
 
 	if err := app.readDataCtx(ctx, conn, buffer); err != nil {
-		app.logger.Printf("error reading data from a connection: %s", err.Error())
-
+		app.logger.Error("error reading data from a connection", loggerArgs{"err": err.Error()})
 		app.errorResponse(conn, err)
 		return
 	}
@@ -188,11 +187,11 @@ func (app *application) okResponse(conn net.Conn, message string) {
 func (app *application) genericResponse(conn net.Conn, res data.Response) {
 	data, err := res.Marshal()
 	if err != nil {
-		app.logger.Printf("error parsing the response: %s", err.Error())
+		app.logger.Error("error parsing the response", loggerArgs{"err": err.Error()})
 		return
 	}
 
 	if _, err := conn.Write(data); err != nil {
-		app.logger.Printf("error writing data to a connection: %s", err.Error())
+		app.logger.Error("error writing data to a connection", loggerArgs{"err": err.Error()})
 	}
 }

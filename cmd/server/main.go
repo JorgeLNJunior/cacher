@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/JorgeLNJunior/cacher/pkg/logger"
 )
 
 type config struct {
@@ -14,30 +15,32 @@ type config struct {
 
 type application struct {
 	config           config
-	logger           *log.Logger
+	logger           *logger.Logger
 	store            *InMemoryStore
 	persistanceStore *OnDiskPersistanceStore
 	wg               sync.WaitGroup
 }
 
+type loggerArgs map[string]string
+
 func main() {
 	store := NewInMemoryStore()
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := logger.NewLogger(logger.LevelInfo, os.Stdout)
 
 	persistanceStore, err := NewInDiskPersistanceStore(store)
 	if err != nil {
-		logger.Printf("error creating the on disk persistance store: %s", err)
+		logger.Error("error creating the on disk persistance store: %s", loggerArgs{"err": err.Error()})
 		os.Exit(1)
 	}
 
-	logger.Println("restoring the data from disk")
+	logger.Info("restoring the data from disk", nil)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	if err := persistanceStore.Restore(ctx); err != nil {
-		logger.Printf("error restoring the data from disk: %s", err)
+		logger.Error("error restoring the data from disk: %s", loggerArgs{"err": err.Error()})
 		os.Exit(1)
 	}
 	cancel()
-	logger.Println("the data has been successfully restored")
+	logger.Info("the data has been successfully restored", nil)
 
 	cfg := config{
 		address: ":8595",
@@ -51,6 +54,9 @@ func main() {
 	}
 
 	if err := app.Listen(); err != nil {
-		app.logger.Printf("error listening at %s: %s\n", app.config.address, err.Error())
+		app.logger.Fatal(
+			"error listening the server",
+			loggerArgs{"addr": app.config.address, "err": err.Error()},
+		)
 	}
 }
