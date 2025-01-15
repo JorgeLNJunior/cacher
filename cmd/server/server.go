@@ -86,9 +86,15 @@ func (app *application) Listen() error {
 }
 
 func (app *application) handleConnection(conn net.Conn) {
-	app.wg.Add(1)
 	defer app.wg.Done()
 	defer conn.Close()
+	defer func() {
+		if r := recover(); r != nil {
+			app.logger.Error("recovered from a panic while processing a request", nil)
+		}
+	}()
+
+	app.wg.Add(1)
 
 	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 5)); err != nil {
 		app.logger.Error("error setting write timeout", loggerArgs{"err": err.Error()})
