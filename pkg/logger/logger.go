@@ -64,7 +64,7 @@ func (l *Logger) Fatal(message string, args map[string]string) {
 }
 
 func (l *Logger) print(level LogLevel, message string, args map[string]string) {
-	if level > l.minLevel {
+	if level < l.minLevel {
 		return
 	}
 
