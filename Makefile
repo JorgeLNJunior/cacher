@@ -1,6 +1,9 @@
 test:
 	@go test ./... -v
 
+benchmark:
+	@go test -bench=. -v -count=10 -run=^# ./...
+
 run/server:
 	@go run ./cmd/server
 

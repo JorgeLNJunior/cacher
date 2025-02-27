@@ -46,6 +46,24 @@ func TestDelete(t *testing.T) {
 	}
 }
 
+func BenchmarkSet(b *testing.B) {
+	storage := NewInMemoryStorage()
+	for b.Loop() {
+		storage.Set(randomString(), randomString())
+	}
+}
+
+func BenchmarkGet(b *testing.B) {
+	storage := NewInMemoryStorage()
+
+	key := randomString()
+	storage.Set(key, randomString())
+
+	for b.Loop() {
+		storage.Get(key)
+	}
+}
+
 func randomString() string {
 	data := make([]byte, 16)
 	_, _ = rand.Read(data)
