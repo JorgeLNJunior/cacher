@@ -10,7 +10,7 @@ func TestSet(t *testing.T) {
 	storage := NewInMemoryStore()
 	expectedKeys := 100
 
-	for i := 0; i < expectedKeys; i++ {
+	for range expectedKeys {
 		storage.Set(string(randomString()), randomString())
 	}
 

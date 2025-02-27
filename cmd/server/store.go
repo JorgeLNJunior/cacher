@@ -1,6 +1,7 @@
 package main
 
 import (
+	"maps"
 	"sync"
 	"time"
 )
@@ -100,10 +101,9 @@ func (s *InMemoryStore) Dump() map[string]StoreItem {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	dump := make(map[string]StoreItem)
-	for k, v := range s.data {
-		dump[k] = v
-	}
+	dump := make(map[string]StoreItem, len(s.data))
+	maps.Copy(dump, s.data)
+
 	return dump
 }
 
