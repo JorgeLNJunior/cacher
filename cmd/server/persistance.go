@@ -13,11 +13,10 @@ import (
 type OnDiskStorage struct {
 	dataDir      string
 	dumpFileName string
-	store        *InMemoryStorage
 }
 
 // NewOnDiskStorage return a new instance of OnDiskStorage.
-func NewOnDiskStorage(store *InMemoryStorage) (*OnDiskStorage, error) {
+func NewOnDiskStorage() (*OnDiskStorage, error) {
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
 		return nil, err
@@ -36,19 +35,18 @@ func NewOnDiskStorage(store *InMemoryStorage) (*OnDiskStorage, error) {
 	defer file.Close()
 
 	return &OnDiskStorage{
-		store:        store,
 		dataDir:      dataDir,
 		dumpFileName: dumpFileName,
 	}, nil
 }
 
-// Persist persists the data from memory on disk
-func (s OnDiskStorage) Persist(ctx context.Context) error {
+// Persist persists the data from a storage on disk
+func (s OnDiskStorage) Persist(ctx context.Context, storage Storage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		dump := s.store.Dump()
+		dump := storage.Dump()
 
 		file, err := os.OpenFile(path.Join(s.dataDir, s.dumpFileName), os.O_RDWR|os.O_TRUNC, os.ModePerm)
 		if err != nil {
@@ -64,8 +62,8 @@ func (s OnDiskStorage) Persist(ctx context.Context) error {
 	}
 }
 
-// Restore restores the data from disk to memory.
-func (s OnDiskStorage) Restore(ctx context.Context) error {
+// Restore restores the data from disk to a storage.
+func (s OnDiskStorage) Restore(ctx context.Context, storage Storage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -85,7 +83,7 @@ func (s OnDiskStorage) Restore(ctx context.Context) error {
 				return err
 			}
 		}
-		s.store.Restore(dump)
+		storage.Restore(dump)
 
 		return nil
 	}

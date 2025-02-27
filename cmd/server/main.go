@@ -35,7 +35,7 @@ func main() {
 	storage := NewInMemoryStorage()
 	logger := logger.NewLogger(logger.LevelInfo, os.Stdout)
 
-	persistanceStorage, err := NewOnDiskStorage(storage)
+	persistanceStorage, err := NewOnDiskStorage()
 	if err != nil {
 		logger.Fatal("error creating the on disk persistance store: %s", loggerArgs{"err": err.Error()})
 	}
@@ -51,7 +51,7 @@ func main() {
 		logger.Info("restoring the data from disk", nil)
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-		if err := persistanceStorage.Restore(ctx); err != nil {
+		if err := persistanceStorage.Restore(ctx, app.storage); err != nil {
 			logger.Fatal("error restoring the data from disk: %s", loggerArgs{"err": err.Error()})
 		}
 		cancel()

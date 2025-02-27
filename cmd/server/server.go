@@ -76,7 +76,7 @@ func (app *application) Listen() error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
 
-		if err := app.persistanceStorage.Persist(ctx); err != nil {
+		if err := app.persistanceStorage.Persist(ctx, app.storage); err != nil {
 			app.logger.Error("error persisting the data on disk", loggerArgs{"err": err.Error()})
 			return err
 		}
