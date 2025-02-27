@@ -15,6 +15,7 @@ import (
 
 const maxChunckSize = 4096
 
+// Listen starts a tcp server.
 func (app *application) Listen() error {
 	listener, err := net.Listen("tcp", app.config.address)
 	if err != nil {
@@ -36,7 +37,7 @@ func (app *application) Listen() error {
 		go func() {
 			defer close(c)
 			app.logger.Info("waiting for open connections before shutting down the server", nil)
-			app.wg.Wait()
+			app.connectionGroup.Wait()
 		}()
 
 		select {
@@ -75,7 +76,7 @@ func (app *application) Listen() error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
 
-		if err := app.persistanceStore.Persist(ctx); err != nil {
+		if err := app.persistanceStorage.Persist(ctx); err != nil {
 			app.logger.Error("error persisting the data on disk", loggerArgs{"err": err.Error()})
 			return err
 		}
@@ -86,7 +87,7 @@ func (app *application) Listen() error {
 }
 
 func (app *application) handleConnection(conn net.Conn) {
-	defer app.wg.Done()
+	defer app.connectionGroup.Done()
 	defer conn.Close()
 	defer func() {
 		if r := recover(); r != nil {
@@ -94,7 +95,7 @@ func (app *application) handleConnection(conn net.Conn) {
 		}
 	}()
 
-	app.wg.Add(1)
+	app.connectionGroup.Add(1)
 
 	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 5)); err != nil {
 		app.logger.Error("error setting write timeout", loggerArgs{"err": err.Error()})
@@ -118,7 +119,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	}
 
 	if req.Operation == data.OperationGet {
-		value, ok := app.store.Get(req.Key)
+		value, ok := app.storage.Get(req.Key)
 		if !ok {
 			app.errorResponse(conn, errors.New("key not found"))
 			return
@@ -127,17 +128,17 @@ func (app *application) handleConnection(conn net.Conn) {
 		return
 	}
 	if req.Operation == data.OperationSet {
-		app.store.Set(req.Key, req.Value)
+		app.storage.Set(req.Key, req.Value)
 		app.okResponse(conn, "the value has been inserted successfully")
 		return
 	}
 	if req.Operation == data.OperationDel {
-		app.store.Delete(req.Key)
+		app.storage.Delete(req.Key)
 		app.okResponse(conn, "the value has been deleted successfully")
 		return
 	}
 	if req.Operation == data.OperationExp {
-		app.store.ExpireAt(req.Key, req.Expiry)
+		app.storage.ExpireAt(req.Key, req.Expiry)
 		app.okResponse(conn, "the expiry has been set successfully")
 		return
 	}

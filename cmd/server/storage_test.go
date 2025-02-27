@@ -7,7 +7,7 @@ import (
 )
 
 func TestSet(t *testing.T) {
-	storage := NewInMemoryStore()
+	storage := NewInMemoryStorage()
 	expectedKeys := 100
 
 	for range expectedKeys {
@@ -22,7 +22,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	storage := NewInMemoryStore()
+	storage := NewInMemoryStorage()
 
 	key := "foo"
 	value := "bar"
@@ -35,7 +35,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	storage := NewInMemoryStore()
+	storage := NewInMemoryStorage()
 	key := "foo"
 
 	storage.Set(key, randomString())

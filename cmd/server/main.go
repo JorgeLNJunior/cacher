@@ -16,11 +16,11 @@ type config struct {
 }
 
 type application struct {
-	config           config
-	logger           *logger.Logger
-	store            *InMemoryStore
-	persistanceStore *OnDiskPersistanceStore
-	wg               sync.WaitGroup
+	config             config
+	logger             *logger.Logger
+	storage            *InMemoryStorage
+	persistanceStorage *OnDiskStorage
+	connectionGroup    sync.WaitGroup
 }
 
 type loggerArgs map[string]string
@@ -32,26 +32,26 @@ func main() {
 	flag.BoolVar(&cfg.persist, "persist", false, "persist data on disk or not")
 	flag.Parse()
 
-	store := NewInMemoryStore()
+	storage := NewInMemoryStorage()
 	logger := logger.NewLogger(logger.LevelInfo, os.Stdout)
 
-	persistanceStore, err := NewInDiskPersistanceStore(store)
+	persistanceStorage, err := NewOnDiskStorage(storage)
 	if err != nil {
 		logger.Fatal("error creating the on disk persistance store: %s", loggerArgs{"err": err.Error()})
 	}
 
 	app := &application{
-		config:           cfg,
-		logger:           logger,
-		store:            store,
-		persistanceStore: persistanceStore,
+		config:             cfg,
+		logger:             logger,
+		storage:            storage,
+		persistanceStorage: persistanceStorage,
 	}
 
 	if app.config.persist {
 		logger.Info("restoring the data from disk", nil)
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-		if err := persistanceStore.Restore(ctx); err != nil {
+		if err := persistanceStorage.Restore(ctx); err != nil {
 			logger.Fatal("error restoring the data from disk: %s", loggerArgs{"err": err.Error()})
 		}
 		cancel()
