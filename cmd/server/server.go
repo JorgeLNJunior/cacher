@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/JorgeLNJunior/cacher/pkg/data"
+	levellog "github.com/JorgeLNJunior/cacher/pkg/logger"
 )
 
 const maxChunckSize = 4096
@@ -23,7 +24,7 @@ func (app *application) Listen() error {
 	}
 	defer listener.Close()
 
-	app.logger.Info("tcp server is listening", loggerArgs{"addr": app.config.address})
+	app.logger.Info("tcp server is listening", levellog.Args{"addr": app.config.address})
 
 	shutdownErr := make(chan error)
 	go func() {
@@ -58,7 +59,7 @@ func (app *application) Listen() error {
 					break // stop processing connections if the server is closed
 				}
 
-				app.logger.Error("error accepting a tcp connection", loggerArgs{"err": err.Error()})
+				app.logger.Error("error accepting a tcp connection", levellog.Args{"err": err.Error()})
 				continue
 			}
 
@@ -68,7 +69,7 @@ func (app *application) Listen() error {
 
 	err = <-shutdownErr
 	if err != nil {
-		app.logger.Error("error shuting down the server", loggerArgs{"err": err.Error()})
+		app.logger.Error("error shuting down the server", levellog.Args{"err": err.Error()})
 	}
 
 	if app.config.persist {
@@ -77,7 +78,7 @@ func (app *application) Listen() error {
 		defer cancel()
 
 		if err := app.persistanceStorage.Persist(ctx, app.storage); err != nil {
-			app.logger.Error("error persisting the data on disk", loggerArgs{"err": err.Error()})
+			app.logger.Error("error persisting the data on disk", levellog.Args{"err": err.Error()})
 			return err
 		}
 		app.logger.Info("the data has been successfully persisted", nil)
@@ -98,7 +99,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	app.connectionGroup.Add(1)
 
 	if err := conn.SetWriteDeadline(time.Now().Add(time.Second * 5)); err != nil {
-		app.logger.Error("error setting write timeout", loggerArgs{"err": err.Error()})
+		app.logger.Error("error setting write timeout", levellog.Args{"err": err.Error()})
 		return
 	}
 
@@ -107,7 +108,7 @@ func (app *application) handleConnection(conn net.Conn) {
 	defer cancel()
 
 	if err := app.readDataCtx(ctx, conn, buffer); err != nil {
-		app.logger.Error("error reading data from a connection", loggerArgs{"err": err.Error()})
+		app.logger.Error("error reading data from a connection", levellog.Args{"err": err.Error()})
 		app.errorResponse(conn, err)
 		return
 	}
@@ -196,11 +197,11 @@ func (app *application) okResponse(conn net.Conn, message string) {
 func (app *application) genericResponse(conn net.Conn, res data.Response) {
 	data, err := res.Marshal()
 	if err != nil {
-		app.logger.Error("error parsing the response", loggerArgs{"err": err.Error()})
+		app.logger.Error("error parsing the response", levellog.Args{"err": err.Error()})
 		return
 	}
 
 	if _, err := conn.Write(data); err != nil {
-		app.logger.Error("error writing data to a connection", loggerArgs{"err": err.Error()})
+		app.logger.Error("error writing data to a connection", levellog.Args{"err": err.Error()})
 	}
 }

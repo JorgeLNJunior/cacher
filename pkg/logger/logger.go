@@ -1,4 +1,4 @@
-package logger
+package levellog
 
 import (
 	"encoding/json"
@@ -33,6 +33,8 @@ func (l LogLevel) String() string {
 	}
 }
 
+type Args map[string]string
+
 type Logger struct {
 	minLevel LogLevel
 	out      io.Writer
@@ -46,24 +48,24 @@ func NewLogger(level LogLevel, out io.Writer) *Logger {
 	}
 }
 
-func (l *Logger) Info(message string, args map[string]string) {
+func (l *Logger) Info(message string, args Args) {
 	l.print(LevelInfo, message, args)
 }
 
-func (l *Logger) Warn(message string, args map[string]string) {
+func (l *Logger) Warn(message string, args Args) {
 	l.print(LevelWarn, message, args)
 }
 
-func (l *Logger) Error(message string, args map[string]string) {
+func (l *Logger) Error(message string, args Args) {
 	l.print(LevelError, message, args)
 }
 
-func (l *Logger) Fatal(message string, args map[string]string) {
+func (l *Logger) Fatal(message string, args Args) {
 	l.print(LevelFatal, message, args)
 	os.Exit(1)
 }
 
-func (l *Logger) print(level LogLevel, message string, args map[string]string) {
+func (l *Logger) print(level LogLevel, message string, args Args) {
 	if level < l.minLevel {
 		return
 	}

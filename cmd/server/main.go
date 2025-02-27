@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JorgeLNJunior/cacher/pkg/logger"
+	levellog "github.com/JorgeLNJunior/cacher/pkg/logger"
 )
 
 type config struct {
@@ -17,13 +17,11 @@ type config struct {
 
 type application struct {
 	config             config
-	logger             *logger.Logger
+	logger             *levellog.Logger
 	storage            *InMemoryStorage
 	persistanceStorage *OnDiskStorage
 	connectionGroup    sync.WaitGroup
 }
-
-type loggerArgs map[string]string
 
 func main() {
 	cfg := config{}
@@ -33,11 +31,11 @@ func main() {
 	flag.Parse()
 
 	storage := NewInMemoryStorage()
-	logger := logger.NewLogger(logger.LevelInfo, os.Stdout)
+	logger := levellog.NewLogger(levellog.LevelInfo, os.Stdout)
 
 	persistanceStorage, err := NewOnDiskStorage()
 	if err != nil {
-		logger.Fatal("error creating the on disk persistance store: %s", loggerArgs{"err": err.Error()})
+		logger.Fatal("error creating the on disk persistance store: %s", levellog.Args{"err": err.Error()})
 	}
 
 	app := &application{
@@ -52,7 +50,7 @@ func main() {
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 		if err := persistanceStorage.Restore(ctx, app.storage); err != nil {
-			logger.Fatal("error restoring the data from disk: %s", loggerArgs{"err": err.Error()})
+			logger.Fatal("error restoring the data from disk: %s", levellog.Args{"err": err.Error()})
 		}
 		cancel()
 
@@ -62,7 +60,7 @@ func main() {
 	if err := app.Listen(); err != nil {
 		app.logger.Fatal(
 			"error listening the server",
-			loggerArgs{"addr": app.config.address, "err": err.Error()},
+			levellog.Args{"addr": app.config.address, "err": err.Error()},
 		)
 	}
 }
